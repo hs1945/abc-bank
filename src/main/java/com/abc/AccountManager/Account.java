@@ -9,7 +9,7 @@ import java.util.*;
 import static java.lang.Math.abs;
 
 
-public abstract class Account {
+public abstract class Account implements AccountInterface{
 
     private Accounts accountType;
     //created a map, so that it will be easy to find transactions for each month
@@ -36,10 +36,6 @@ public abstract class Account {
         this.currentBalance = 0;
         this.interestEarned = 0;
         this.openDate = new Date();
-    }
-
-    public long getAccountNumber() {
-        return accountNumber;
     }
 
     private void addTransaction(double amount) {
