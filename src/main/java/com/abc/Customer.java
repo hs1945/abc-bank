@@ -1,78 +1,75 @@
 package com.abc;
 
+import com.abc.AccountManager.*;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static java.lang.Math.abs;
 
-public class Customer {
-    private String name;
-    private List<Account> accounts;
+class Customer {
+    private long id;
+    private final String name;
+    private final List<Account> accounts;
 
-    public Customer(String name) {
+
+    Customer(String name) {
         this.name = name;
-        this.accounts = new ArrayList<Account>();
+        this.accounts = new ArrayList<>();
     }
 
-    public String getName() {
+    List<Account> getAccounts() {
+        return accounts;
+    }
+
+    String getName() {
         return name;
     }
 
-    public Customer openAccount(Account account) {
+    Customer openAccount(Account account) {
         accounts.add(account);
         return this;
     }
 
-    public int getNumberOfAccounts() {
+    int getNumberOfAccounts() {
         return accounts.size();
     }
 
-    public double totalInterestEarned() {
+    double totalInterestEarned() {
         double total = 0;
         for (Account a : accounts)
-            total += a.interestEarned();
+            total += a.getInterestEarned();
         return total;
     }
 
-    public String getStatement() {
-        String statement = null;
-        statement = "Statement for " + name + "\n";
+    double totalInterestEarned(Date date) {
+        double total = 0;
+        for (Account a : accounts)
+            total += a.getInterestEarned(date);
+        return total;
+    }
+
+    String getStatement() {
+        StringBuilder statement = new StringBuilder();
+
+
+        statement.append("Statement for ");
+        statement.append(name);
+        statement.append("\n");
+
         double total = 0.0;
         for (Account a : accounts) {
-            statement += "\n" + statementForAccount(a) + "\n";
-            total += a.sumTransactions();
+            statement.append(a.getAccountType());
+            statement.append("\n");
+            statement.append(a.printStatement());
+            statement.append("\n");
+            total += a.getCurrentBalance();
         }
-        statement += "\nTotal In All Accounts " + toDollars(total);
-        return statement;
+        statement.append("\nTotal In All Accounts ");
+        statement.append(String.format("$%,.2f", abs(total)));
+        return statement.toString();
     }
 
-    private String statementForAccount(Account a) {
-        String s = "";
 
-       //Translate to pretty account type
-        switch(a.getAccountType()){
-            case Account.CHECKING:
-                s += "Checking Account\n";
-                break;
-            case Account.SAVINGS:
-                s += "Savings Account\n";
-                break;
-            case Account.MAXI_SAVINGS:
-                s += "Maxi Savings Account\n";
-                break;
-        }
-
-        //Now total up all the transactions
-        double total = 0.0;
-        for (Transaction t : a.transactions) {
-            s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + toDollars(t.amount) + "\n";
-            total += t.amount;
-        }
-        s += "Total " + toDollars(total);
-        return s;
-    }
-
-    private String toDollars(double d){
-        return String.format("$%,.2f", abs(d));
-    }
 }

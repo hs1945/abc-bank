@@ -1,23 +1,24 @@
 package com.abc;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class Bank {
-    private List<Customer> customers;
+class Bank {
+    private final Map<Long, Customer> customers;
+    private static long customerId = 0;
 
-    public Bank() {
-        customers = new ArrayList<Customer>();
+    Bank() {
+        customers = new HashMap<>();
     }
 
-    public void addCustomer(Customer customer) {
-        customers.add(customer);
+    void addCustomer(Customer customer) {
+        customerId++;
+        customers.put(customerId, customer);
     }
 
-    public String customerSummary() {
+    String customerSummary() {
         String summary = "Customer Summary";
-        for (Customer c : customers)
-            summary += "\n - " + c.getName() + " (" + format(c.getNumberOfAccounts(), "account") + ")";
+        for (long l : customers.keySet())
+            summary += "\n - " + customers.get(l).getName() + " (" + format(customers.get(l).getNumberOfAccounts(), "account") + ")";
         return summary;
     }
 
@@ -29,11 +30,19 @@ public class Bank {
 
     public double totalInterestPaid() {
         double total = 0;
-        for(Customer c: customers)
-            total += c.totalInterestEarned();
+        for (Long id : customers.keySet())
+            total += customers.get(id).totalInterestEarned();
         return total;
     }
 
+    double totalInterestPaid(Date date) {
+        double total = 0;
+        for (Long id : customers.keySet())
+            total += customers.get(id).totalInterestEarned(date);
+        return total;
+    }
+
+/*
     public String getFirstCustomer() {
         try {
             customers = null;
@@ -42,5 +51,10 @@ public class Bank {
             e.printStackTrace();
             return "Error";
         }
+    }
+*/
+
+    Customer getCustomer(long id){
+        return customers.get(id);
     }
 }

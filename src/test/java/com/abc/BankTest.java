@@ -1,6 +1,11 @@
 package com.abc;
 
+import com.abc.AccountManager.*;
+import com.abc.util.DateHelper;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +16,7 @@ public class BankTest {
     public void customerSummary() {
         Bank bank = new Bank();
         Customer john = new Customer("John");
-        john.openAccount(new Account(Account.CHECKING));
+        john.openAccount(new CheckingAccount());
         bank.addCustomer(john);
 
         assertEquals("Customer Summary\n - John (1 account)", bank.customerSummary());
@@ -20,35 +25,117 @@ public class BankTest {
     @Test
     public void checkingAccount() {
         Bank bank = new Bank();
-        Account checkingAccount = new Account(Account.CHECKING);
+        Account checkingAccount = new CheckingAccount();
         Customer bill = new Customer("Bill").openAccount(checkingAccount);
         bank.addCustomer(bill);
 
-        checkingAccount.deposit(100.0);
+        checkingAccount.deposit(500.0);
+        Date today = new Date();
+        double actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        double expectedInterestEarned = 500*Math.pow(1 + (0.01/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
 
-        assertEquals(0.1, bank.totalInterestPaid(), DOUBLE_DELTA);
+        checkingAccount.withdraw(200.0);
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned = 300*Math.pow(1 + (0.01/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 300;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+        checkingAccount.deposit(100.0);
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned = 400*Math.pow(1 + (0.01/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 400;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
     }
 
     @Test
     public void savings_account() {
         Bank bank = new Bank();
-        Account checkingAccount = new Account(Account.SAVINGS);
-        bank.addCustomer(new Customer("Bill").openAccount(checkingAccount));
+        Account savingsAccount = new SavingsAccount();
+        bank.addCustomer(new Customer("Bill").openAccount(savingsAccount));
 
-        checkingAccount.deposit(1500.0);
+        savingsAccount.deposit(1500.0);
+        Date today = new Date();
 
-        assertEquals(2.0, bank.totalInterestPaid(), DOUBLE_DELTA);
+        double actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        double expectedInterestEarned = 1500*Math.pow(1 + (0.02/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 1500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+        Account savingsAccount2 = new SavingsAccount();
+        bank.addCustomer(new Customer("Mill").openAccount(savingsAccount2));
+
+        savingsAccount2.deposit(500.0);
+
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned += 500*Math.pow(1 + (0.01/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
     }
+
+    @Test
+    public void changeAccount(){
+        Bank bank = new Bank();
+        Account savingsAccount = new SavingsAccount();
+        bank.addCustomer(new Customer("Bill").openAccount(savingsAccount));
+
+        savingsAccount.deposit(1500.0);
+        Date today = new Date();
+
+        double actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        double expectedInterestEarned = 1500*Math.pow(1 + (0.02/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 1500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+        List<Account> accounts = bank.getCustomer(1).getAccounts();
+        Account account = accounts.get(0);
+        Account converted = account.convertTo(Accounts.CHECKING);
+        accounts.set(0,converted);
+
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned = 1500*Math.pow(1 + (0.01/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 1500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+    }
+
 
     @Test
     public void maxi_savings_account() {
         Bank bank = new Bank();
-        Account checkingAccount = new Account(Account.MAXI_SAVINGS);
-        bank.addCustomer(new Customer("Bill").openAccount(checkingAccount));
+        Account account = new MaxiSavingsAccount();
+        bank.addCustomer(new Customer("Bill").openAccount(account));
 
-        checkingAccount.deposit(3000.0);
+        account.deposit(3000.0);
 
-        assertEquals(170.0, bank.totalInterestPaid(), DOUBLE_DELTA);
+        Date today = new Date();
+
+        double actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        double expectedInterestEarned = 3000*Math.pow(1 + (0.1/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 3000;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+        Account account2 = new MaxiSavingsAccount();
+        bank.addCustomer(new Customer("Mill").openAccount(account2));
+
+        account2.deposit(500.0);
+
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned += 500*Math.pow(1 + (0.02/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
+
+        Account account3 = new MaxiSavingsAccount();
+        bank.addCustomer(new Customer("Mill").openAccount(account3));
+
+        account3.deposit(1500.0);
+
+        actualInterestEarned = bank.totalInterestPaid(DateHelper.getFirstDateOfMonth(today));
+        expectedInterestEarned += 1500*Math.pow(1 + (0.05/DateHelper.daysInYear(today)),
+                DateHelper.daysBetween(DateHelper.getLastDateOfMonth(today), today)) - 1500;
+        assertEquals(expectedInterestEarned,actualInterestEarned , DOUBLE_DELTA);
     }
 
 }
